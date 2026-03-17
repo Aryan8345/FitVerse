@@ -13,8 +13,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request body' });
   }
 
-  // Use the stable text-bison model (known to exist) and pass the key as a query parameter.
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-bison-001:generateContent?key=${apiKey}`;
+  // Use a model that is available for this API key.
+  // If you want to change models, set GEMINI_MODEL (e.g. "gemini-2.5-pro" or "gemini-2.5-flash").
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const apiVersion = process.env.GENERATIVE_API_VERSION || 'v1';
+
+  const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey}`;
   console.log('Calling Gemini endpoint:', url);
   const googleRes = await fetch(url, {
     method: 'POST',
