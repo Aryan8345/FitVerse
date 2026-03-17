@@ -13,10 +13,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid request body' });
   }
 
-  // Use a model that is available for this API key.
-  // If you want to change models, set GEMINI_MODEL (e.g. "gemini-2.5-pro" or "gemini-2.5-flash").
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const apiVersion = process.env.GENERATIVE_API_VERSION || 'v1';
+  // Always use a known-supported model for this API key.
+  // This avoids issues if Vercel env vars are misconfigured.
+  const model = 'gemini-2.5-flash';
+  const apiVersion = 'v1';
 
   const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${model}:generateContent?key=${apiKey}`;
   console.log('Calling Gemini endpoint:', url);
@@ -28,6 +28,16 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify(body),
   });
+
+  if (googleRes.status === 404) {
+    const errText = await googleRes.text();
+    return res.status(404).json({
+      error: 'Model not found',
+      model,
+      apiVersion,
+      detail: errText,
+    });
+  }
 
   const text = await googleRes.text();
   let data;
